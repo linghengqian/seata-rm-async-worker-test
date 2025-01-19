@@ -60,9 +60,9 @@ public class SimpleTest {
                         )
                         """);
                 statement.execute("TRUNCATE TABLE t_order");
-                statement.execute("INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (1, 1, 1, 1, 'INSERT_TEST')");
+                statement.executeUpdate("INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (1, 1, 1, 1, 'INSERT_TEST')");
                 statement.executeQuery("SELECT * FROM t_order");
-                statement.execute("DELETE FROM t_order WHERE order_id=1");
+                statement.executeUpdate("DELETE FROM t_order WHERE order_id=1");
                 statement.executeQuery("SELECT * FROM t_order");
             }
             try (Connection connection = seataDataSource.getConnection()) {
