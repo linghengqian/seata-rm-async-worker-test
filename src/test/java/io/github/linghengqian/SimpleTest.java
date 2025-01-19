@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -60,9 +61,21 @@ public class SimpleTest {
                         )
                         """);
                 statement.execute("TRUNCATE TABLE t_order");
-                statement.executeUpdate("INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (1, 1, 1, 1, 'INSERT_TEST')");
+                IntStream.range(1, 101).parallel().forEach(i -> {
+                    try {
+                        statement.executeUpdate("INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (%d, %d, %d, %d, 'INSERT_TEST')" .formatted(i, i, i % 2, i));
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
                 statement.executeQuery("SELECT * FROM t_order");
-                statement.executeUpdate("DELETE FROM t_order WHERE order_id=1");
+                IntStream.range(1, 101).parallel().forEach(i -> {
+                    try {
+                        statement.executeUpdate("DELETE FROM t_order WHERE order_id=%d" .formatted(i));
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
                 statement.executeQuery("SELECT * FROM t_order");
             }
             try (Connection connection = seataDataSource.getConnection()) {
