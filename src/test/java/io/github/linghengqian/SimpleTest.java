@@ -41,14 +41,13 @@ public class SimpleTest {
             System.setProperty("service.default.grouplist", "127.0.0.1:" + seataContainer.getMappedPort(8091));
             TMClient.init("test-first", "default_tx_group");
             RMClient.init("test-first", "default_tx_group");
-            Stream.of("demo_ds_0", "demo_ds_1", "demo_ds_2").parallel()
-                    .forEach(databaseName -> {
-                        try {
-                            exSQL(databaseName);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+            Stream.of("demo_ds_0", "demo_ds_1", "demo_ds_2").parallel().forEach(databaseName -> {
+                try {
+                    exSQL(databaseName);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
             TmNettyRemotingClient.getInstance().destroy();
             RmNettyRemotingClient.getInstance().destroy();
             ConfigurationFactory.reload();
@@ -60,16 +59,15 @@ public class SimpleTest {
     private void exSQL(String databaseName) throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.testcontainers.jdbc.ContainerDatabaseDriver");
-        config.setJdbcUrl("jdbc:tc:postgresql:17.1-bookworm://test/%s?TC_INITSCRIPT=init.sql".formatted(databaseName));
+        config.setJdbcUrl("jdbc:tc:postgresql:17.2-bookworm://test/%s?TC_INITSCRIPT=init.sql".formatted(databaseName));
         DataSource hikariDataSource = new HikariDataSource(config);
         DataSource seataDataSource = new DataSourceProxy(hikariDataSource);
         Awaitility.await().atMost(Duration.ofSeconds(15L)).ignoreExceptions().until(() -> {
             seataDataSource.getConnection().close();
             return true;
         });
-        try (Connection connection = seataDataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.execute("""
+        try (Connection connection = seataDataSource.getConnection()) {
+            connection.createStatement().execute("""
                     CREATE TABLE IF NOT EXISTS t_order (
                         order_id BIGSERIAL NOT NULL PRIMARY KEY,
                         order_type INTEGER,
@@ -78,23 +76,25 @@ public class SimpleTest {
                         status VARCHAR(50)
                     )
                     """);
-            statement.execute("TRUNCATE TABLE t_order");
-            IntStream.range(1, 11).forEach(i -> {
+            connection.createStatement().execute("TRUNCATE TABLE t_order");
+            IntStream.range(1, 100001).parallel().forEach(i -> {
                 try {
-                    statement.executeUpdate("INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (%d, %d, %d, %d, 'INSERT_TEST')".formatted(i, i, i % 2, i));
+                    connection.createStatement().executeUpdate(
+                            "INSERT INTO t_order (order_id, user_id, order_type, address_id, status) VALUES (%d, %d, %d, %d, 'INSERT_TEST')"
+                                    .formatted(i, i, i % 2, i));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
             });
-            statement.executeQuery("SELECT * FROM t_order");
-            IntStream.range(1, 11).forEach(i -> {
+            connection.createStatement().executeQuery("SELECT * FROM t_order");
+            IntStream.range(1, 100001).parallel().forEach(i -> {
                 try {
-                    statement.executeUpdate("DELETE FROM t_order WHERE order_id=%d".formatted(i));
+                    connection.createStatement().executeUpdate("DELETE FROM t_order WHERE order_id=%d".formatted(i));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
             });
-            statement.executeQuery("SELECT * FROM t_order");
+            connection.createStatement().executeQuery("SELECT * FROM t_order");
         }
         try (Connection connection = seataDataSource.getConnection()) {
             try {
