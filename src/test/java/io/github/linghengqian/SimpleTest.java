@@ -9,6 +9,8 @@ import org.apache.seata.rm.RMClient;
 import org.apache.seata.rm.datasource.DataSourceProxy;
 import org.apache.seata.tm.TMClient;
 import org.awaitility.Awaitility;
+import org.firebirdsql.management.FBManager;
+import org.firebirdsql.management.PageSizeConstants;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -51,7 +53,7 @@ public class SimpleTest {
         RMClient.init("test-first", "default_tx_group");
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.testcontainers.jdbc.ContainerDatabaseDriver");
-        config.setJdbcUrl("jdbc:tc:postgresql:17.2-bookworm://test/%s?TC_INITSCRIPT=init.sql".formatted("demo_ds_0"));
+        config.setJdbcUrl("jdbc:tc:postgresql:17.2-bookworm://test/demo_ds_0?TC_INITSCRIPT=init.sql");
         DataSource hikariDataSource = new HikariDataSource(config);
         DataSource seataDataSource = new DataSourceProxy(hikariDataSource);
         Awaitility.await().atMost(Duration.ofSeconds(15L)).ignoreExceptions().until(() -> {
@@ -66,14 +68,37 @@ public class SimpleTest {
     }
 
     private void testWithoutSeataClient() {
+        GenericContainer<?> firebirdContainer = new GenericContainer<>("ghcr.io/fdcastel/firebird:5.0.1");
+        firebirdContainer.withEnv("FIREBIRD_ROOT_PASSWORD", "masterkey")
+                .withEnv("FIREBIRD_USER", "alice")
+                .withEnv("FIREBIRD_PASSWORD", "masterkey")
+                .withEnv("FIREBIRD_DATABASE", "mirror.fdb")
+                .withEnv("FIREBIRD_DATABASE_DEFAULT_CHARSET", "UTF8")
+                .withExposedPorts(3050);
+        firebirdContainer.start();
+        try (FBManager fbManager = new FBManager()) {
+            fbManager.setServer("localhost");
+            fbManager.setUserName("alice");
+            fbManager.setPassword("masterkey");
+            fbManager.setFileName("/var/lib/firebird/data/mirror.fdb");
+            fbManager.setPageSize(PageSizeConstants.SIZE_16K);
+            fbManager.setDefaultCharacterSet("UTF8");
+            fbManager.setPort(firebirdContainer.getMappedPort(3050));
+            fbManager.start();
+            fbManager.createDatabase("/var/lib/firebird/data/demo_ds_1.fdb", "alice", "masterkey");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         HikariConfig config = new HikariConfig();
-        config.setDriverClassName("org.testcontainers.jdbc.ContainerDatabaseDriver");
-        config.setJdbcUrl("jdbc:tc:postgresql:17.2-bookworm://test/%s?TC_INITSCRIPT=init.sql".formatted("demo_ds_1"));
-        HikariDataSource hikariDataSource = new HikariDataSource(config);
+        config.setDriverClassName("org.firebirdsql.jdbc.FBDriver");
+        config.setJdbcUrl("jdbc:firebird://localhost:" + firebirdContainer.getMappedPort(3050) + "//var/lib/firebird/data/" + "demo_ds_1");
+        config.setUsername("alice");
+        config.setPassword("masterkey");
+        DataSource hikariDataSource = new HikariDataSource(config);
         Awaitility.await().atMost(Duration.ofSeconds(15L)).ignoreExceptions().until(() -> {
             hikariDataSource.getConnection().close();
             return true;
         });
-        hikariDataSource.close();
+        firebirdContainer.close();
     }
 }

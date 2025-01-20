@@ -8,7 +8,7 @@ on:
       - master
 jobs:
   native-test-ci:
-    name: NativeTest - GraalVM CE for JDK ${{ matrix.java }} on ${{ matrix.os }}
+    name: Test - GraalVM CE for JDK ${{ matrix.java }} on ${{ matrix.os }}
     if: github.repository == 'linghengqian/seata-rm-async-worker-test'
     strategy:
       matrix:
