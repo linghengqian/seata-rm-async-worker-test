@@ -28,11 +28,11 @@ public class SimpleTest {
     void test() {
         assertThat(System.getProperty("service.default.grouplist"), is(nullValue()));
         CompletableFuture<Void> futureFirst = CompletableFuture.runAsync(this::testWithSeataClient);
-        CompletableFuture<Void> futureSecond = futureFirst.thenAccept(result -> {
+        CompletableFuture<Void> futureSecond = futureFirst.thenAccept(_ -> {
             CompletableFuture<Void> childFuture = CompletableFuture.runAsync(this::testWithSeataClient);
             Awaitility.await().atMost(5L, TimeUnit.MINUTES).until(childFuture::isDone);
         });
-        futureSecond.thenAccept(result -> {
+        futureSecond.thenAccept(_ -> {
             CompletableFuture<Void> childFuture = CompletableFuture.runAsync(this::testWithoutSeataClient);
             Awaitility.await().atMost(5L, TimeUnit.MINUTES).until(childFuture::isDone);
         });

@@ -1,0 +1,27 @@
+name: Test
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+jobs:
+  native-test-ci:
+    name: NativeTest - GraalVM CE for JDK ${{ matrix.java }} on ${{ matrix.os }}
+    if: github.repository == 'linghengqian/seata-rm-async-worker-test'
+    strategy:
+      matrix:
+        java: [ '22.0.2' ]
+        os: [ 'ubuntu-latest' ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+      - run: |
+          ./mvnw -T 1.5C clean test

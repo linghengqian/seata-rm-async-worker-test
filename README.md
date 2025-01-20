@@ -5,11 +5,11 @@
 - Verified unit test under Ubuntu 22.04.4 LTS with `SDKMAN!` and `Docker CE`.
 
 ```shell
-sdk install java 21.0.2-open
+sdk install java 22.0.2-graalce
 
 git clone git@github.com:linghengqian/seata-rm-async-worker-test.git
 cd ./seata-rm-async-worker-test/
-sdk use java 21.0.2-open
+sdk use java 22.0.2-graalce
 ./mvnw -T 1C clean test
 ```
 
@@ -40,7 +40,7 @@ $ ./mvnw -T 1C clean test
 [INFO] 
 [INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ seata-rm-async-worker-test ---
 [INFO] Recompiling the module because of changed source code.
-[INFO] Compiling 1 source file with javac [debug target 21] to target/test-classes
+[INFO] Compiling 1 source file with javac [debug target 22] to target/test-classes
 [INFO] 
 [INFO] --- surefire:3.2.5:test (default-test) @ seata-rm-async-worker-test ---
 [INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
@@ -49,11 +49,13 @@ $ ./mvnw -T 1C clean test
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
 [INFO] Running io.github.linghengqian.SimpleTest
-[ERROR] 2025-01-19 15:49:47.870 [main] o.a.s.config.ConfigurationFactory - failed to load non-spring configuration :not found service provider for : org.apache.seata.config.ConfigurationProvider
+[ERROR] 2025-01-20 21:51:55.828 [ForkJoinPool.commonPool-worker-1] o.a.s.config.ConfigurationFactory - failed to load non-spring configuration :not found service provider for : org.apache.seata.config.ConfigurationProvider
 org.apache.seata.common.loader.EnhancedServiceNotFoundException: not found service provider for : org.apache.seata.config.ConfigurationProvider
-[ERROR] 2025-01-19 15:50:56.225 [main] o.a.s.config.ConfigurationFactory - failed to load non-spring configuration :not found service provider for : org.apache.seata.config.ConfigurationProvider
+[ERROR] 2025-01-20 21:51:58.306 [ForkJoinPool.commonPool-worker-1] o.a.s.config.ConfigurationFactory - failed to load non-spring configuration :not found service provider for : org.apache.seata.config.ConfigurationProvider
 org.apache.seata.common.loader.EnhancedServiceNotFoundException: not found service provider for : org.apache.seata.config.ConfigurationProvider
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 77.11 s -- in io.github.linghengqian.SimpleTest
+[ERROR] 2025-01-20 21:52:03.991 [ForkJoinPool.commonPool-worker-2] o.a.s.config.ConfigurationFactory - failed to load non-spring configuration :not found service provider for : org.apache.seata.config.ConfigurationProvider
+org.apache.seata.common.loader.EnhancedServiceNotFoundException: not found service provider for : org.apache.seata.config.ConfigurationProvider
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.91 s -- in io.github.linghengqian.SimpleTest
 [INFO] 
 [INFO] Results:
 [INFO] 
@@ -62,7 +64,7 @@ org.apache.seata.common.loader.EnhancedServiceNotFoundException: not found servi
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  01:20 min (Wall Clock)
-[INFO] Finished at: 2025-01-19T15:50:57+08:00
+[INFO] Total time:  19.120 s (Wall Clock)
+[INFO] Finished at: 2025-01-20T21:52:05+08:00
 [INFO] ------------------------------------------------------------------------
 ```
